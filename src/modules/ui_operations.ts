@@ -31,18 +31,15 @@ namespace UIOperations {
       };
     
       export function openUrl( url : string ) : void{
-        Logger.log('openUrl. url: ' + url);
         const html = `<html>
-      <a id='url' href="${url}">Click here</a>
+      <a id='url' href="${url}">Kliknih tutaj</a>
         <script>
            var winRef = window.open("${url}");
-           winRef ? google.script.host.close() : window.alert('Configure browser to allow popup to redirect you to ${url}') ;
+           winRef ? google.script.host.close() : window.alert('Skonfiguruj przeglądarkę, aby pozwalała na przekierowanie do ${url}') ;
            </script>
       </html>`; 
-        Logger.log('openUrl. html: ' + html);
         var htmlOutput = HtmlService.createHtmlOutput(html).setWidth( 250 ).setHeight( 300 );
-        Logger.log('openUrl. htmlOutput: ' + htmlOutput);
-        SpreadsheetApp.getUi().showModalDialog( htmlOutput, `openUrl function in generic.gs is now opening a URL...` ); // https://developers.google.com/apps-script/reference/base/ui#showModalDialog(Object,String)  Requires authorization with this scope: https://www.googleapis.com/auth/script.container.ui  See https://developers.google.com/apps-script/concepts/scopes#setting_explicit_scopes
+        SpreadsheetApp.getUi().showModalDialog( htmlOutput, `Otwieranie linku...` ); // https://developers.google.com/apps-script/reference/base/ui#showModalDialog(Object,String)  Requires authorization with this scope: https://www.googleapis.com/auth/script.container.ui  See https://developers.google.com/apps-script/concepts/scopes#setting_explicit_scopes
       }
       
     export function showDialog(title: string, warning: string | null = null, alert: string | null = null, info: string | null = null, height: number = 200, width: number = 450) : void {
