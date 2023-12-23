@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Modlitwa wstawiennicza</title>
+    <meta charset="utf-8">
+    <base target="_top">
+    <script src="https://cdn.tailwindcss.com"></script>    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Use a templated HTML printing scriptlet to import common stylesheet -->
+
+  </head>
+  <body>
+    <div class="vertical">
+        <h1 class="text-4xl font-extrabold">Modlitwa wstawiennicza</h1>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.showDateRangePicker()">
+            Wybierz zakres
+        </button>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.refresh()">
+            Odśwież
+        </button>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.insertDialog()">
+            Wstaw
+        </button>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.deleteIntention()">
+            Usuń
+        </button>
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.assignIntentions()">
+            Przydziel
+        </button>
+        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.sendEmails()">
+            Wyślij
+        </button>
+        <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.generateIntentionsDoc()">
+            Generuj plik
+        </button>
+    </div>
+    <style>
+        body {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .vertical {
+            display: flex;
+            flex-direction: column;
+            justify-content: start;
+            align-items: center;
+            gap: 3%;
+            padding: 2%;
+        }
+        button {
+            width: 100%;
+            margin-top: 6%;
+            margin-left: 2%;
+            margin-right: 2%;
+        }
+        
+    </style>
+
+  </body>
+</html>
