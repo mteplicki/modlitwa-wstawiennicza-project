@@ -1,58 +1,69 @@
-import { Utils } from "utils";
+import Utils from "./modules/utils";
+import Variables from "./modules/variables";
+import UIOperations from "./modules/ui_operations";
+import SheetOperations from "./modules/sheet_operations";
 
-function updateDateRange(range: string) {
+function updateDateRange(range: string) : void {
     try {
-        let sheet = SpreadsheetApp.getActive().getSheetByName('Intencje')
+        let ss = SpreadsheetApp.getActive()
+        if (ss.getActiveSheet().getName() !== 'Intencje') {
+            throw new Error("Przełącz się na arkusz 'Intencje'")
+        }
+        let sheet = ss.getSheetByName('Intencje')
         if (sheet === null) {
             throw new Error("Sheet 'Intencje' not found")
         }
-        const [start, end] = Utils.getRangeArray()
-        const start_day = Utils.dayWeek[new Date(start).getDay()]
-        const end_day = Utils.dayWeek[new Date(end).getDay()]
+        const [start, end] = SheetOperations.getRangeArray()
+        const start_day = UIOperations.dayWeek[new Date(start).getDay()]
+        const end_day = UIOperations.dayWeek[new Date(end).getDay()]
         sheet?.getRange("A1:H1").setValue(`Intencje z zakresu: ${range} [${start_day} - ${end_day}]`)
-        sheet?.getRange("A1:H1").protect()
-        Utils.refreshFilter()
-        Utils.insertZaParafian(sheet)
-        
+        SheetOperations.refreshFilter()
+        SheetOperations.insertZaParafian(sheet)
+
     } catch (e: any) {
         if (e instanceof Error) {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
         } else {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
         }
     }
 }
 
-function showDateRangePicker() {
-    Utils.showPickerDialog(Utils.getRange(), 400, 650)
+function showDateRangePicker() : void {
+    UIOperations.showPickerDialog(SheetOperations.getRange(), 400, 650)
 }
 
-function refresh() {
+function refresh() : void{
     let error: string | null = null
     let unread: any[] = []
-    try{
+    try {
+        let ss = SpreadsheetApp.getActive()
+        if (ss.getActiveSheet().getName() !== 'Intencje') {
+            throw new Error("Przełącz się na arkusz 'Intencje'")
+        }
         let START = Date.now();
         let unstored = GmailApp.search('subject:"[Skrzynka intencji] Nowa intencja" -label:stored_sheet')
-        let intentions_all_sheet = SpreadsheetApp.getActive().getSheetByName('Intencje')
+        let intentions_all_sheet = ss.getSheetByName('Intencje')
         if (intentions_all_sheet === null) {
             throw new Error("Sheet not found")
         }
         unstored.reverse()
-        
+
         for (let unstored_thread of unstored) {
             if (!Utils.isTimeLeft(START)) {
                 throw new Error("Przekroczono czas wykonania skryptu. Nie wszystkie intencje zostały zapisane. Spróbuj ponownie.")
             }
             for (let unstored_message of unstored_thread.getMessages()) {
-                let [date, name, intention] = Utils.parseIntentionGmail(intentions_all_sheet, unstored_message);
-                Utils.insertIntention(date, name, intention, intentions_all_sheet);
+                let [date, name, intention] = SheetOperations.parseIntentionGmail(intentions_all_sheet, unstored_message);
+                SheetOperations.insertIntention(date, name, intention, intentions_all_sheet);
             }
             unstored_thread.addLabel(GmailApp.getUserLabelByName('stored_sheet'))
+            unstored_thread.markRead()
         }
         unread = GmailApp.search('-subject:"[Skrzynka intencji] Nowa intencja" is:unread')
-        Utils.refreshFilter()
-        Utils.insertZaParafian(intentions_all_sheet);
-        
+        SheetOperations.refreshFilter()
+        SheetOperations.insertZaParafian(intentions_all_sheet);
+
     } catch (e: any) {
         if (e instanceof Error) {
             error = e.message
@@ -60,52 +71,82 @@ function refresh() {
             error = String(e)
         }
     }
-    let nieprzyczytane_word = Utils.getNieprzeczytanychWord(unread.length)
+    let nieprzyczytane_word = UIOperations.getNieprzeczytanychWord(unread.length)
     let warning = unread.length > 0 ? `W poczcie znajdują się ${unread.length} ${nieprzyczytane_word}. Otwórz Gmail i przeczytaj je.` : null
     let alert = error !== null ? "Wystąpił błąd: " + error : null
     let info = error === null ? "Odświeżono intencje." : null
     let DIALOG_TITLE = "Odświeżanie intencji"
-    Utils.showDialog(DIALOG_TITLE, warning, alert, info)
+    UIOperations.showDialog(DIALOG_TITLE, warning, alert, info)
 }
 
 
 
-function insertFromDialog(date: string, name: string, intention: string) {
-    try{
-        Utils.insertIntention(date, name, intention);
-        Utils.refreshFilter()
+function insertFromDialog(date: string, name: string, intention: string) : void{
+    try {
+        let ss = SpreadsheetApp.getActive()
+        if (ss.getActiveSheet().getName() !== 'Intencje') {
+            throw new Error("Przełącz się na arkusz 'Intencje'")
+        }
+        SheetOperations.insertIntention(date, name, intention);
+        SheetOperations.refreshFilter()
     } catch (e: any) {
         if (e instanceof Error) {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
         } else {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
         }
-    }    
+    }
 }
 
-function insertDialog() {
-    let html = HtmlService.createTemplateFromFile('src/AddIntention').evaluate().setWidth(400).setHeight(650)
-    SpreadsheetApp.getUi().showModalDialog(html, 'Dodaj intencję')
+function insertDialog() : void{
+    try {
+        let ss = SpreadsheetApp.getActive()
+        if (ss.getActiveSheet().getName() !== 'Intencje') {
+            throw new Error("Przełącz się na arkusz 'Intencje'")
+        }
+        let html = HtmlService.createTemplateFromFile('src/templates/AddIntention').evaluate().setWidth(400).setHeight(650)
+        SpreadsheetApp.getUi().showModalDialog(html, 'Dodaj intencję')
+    } catch (e: any) {
+        if (e instanceof Error) {
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
+        } else {
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
+        }
+    }
+
 }
 
 
-function onOpen() {
+function onOpen() : void {
     SpreadsheetApp
         .getUi()
-        .createMenu('Intencje')
-        .addItem('Otwórz panel', 'showAdminSidebar')
+        .createMenu('Modlitwa wstawiennicza')
+        .addItem('Otwórz panel intencji', 'showIntentionSidebar')
+        .addItem('Otwórz panel uczestników', 'showUsersSidebar')
         .addToUi();
 }
 
-function showAdminSidebar() {
-    var widget = HtmlService.createHtmlOutputFromFile('src/AdminSidebar')
-    SpreadsheetApp.getUi().showSidebar(widget);
+function showIntentionSidebar() : void{
+    try {
+        let widget = HtmlService.createHtmlOutputFromFile('src/templates/AdminSidebar').setTitle('Modlitwa wstawiennicza MOST')
+        SpreadsheetApp.getUi().showSidebar(widget);
+    } catch (e: any) {
+        if (e instanceof Error) {
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
+        } else {
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
+        }
+    }
 }
 
-function deleteIntention(){
-    try{
+function deleteIntention() : void{
+    try {
         //not deleting intention, just hiding it by setting "deleted" column to true
-        let sheet = SpreadsheetApp.getActive().getSheetByName('Intencje')
+        let ss = SpreadsheetApp.getActive()
+        if (ss.getActiveSheet().getName() !== 'Intencje') {
+            throw new Error("Przełącz się na arkusz 'Intencje'")
+        }
+        let sheet = ss.getSheetByName('Intencje')
         if (sheet === null) {
             throw new Error("Sheet not found")
         }
@@ -119,20 +160,23 @@ function deleteIntention(){
             throw new Error("UUID not found")
         }
         SpreadsheetApp.getActive().getSheetByName('Intencje')?.getRange(`G${row}`).setValue("TRUE")
-        Utils.refreshFilter()
-        Utils.showDialog("Usunięto intencję", null, null, "Usunięto intencję.")
+        SheetOperations.refreshFilter()
+        UIOperations.showDialog("Usunięto intencję", null, null, "Usunięto intencję.")
     } catch (e: any) {
         if (e instanceof Error) {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
         } else {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
         }
     }
 }
 
-function assignIntentions(){
-    try{
+function assignIntentions() : void {
+    try {
         let ss = SpreadsheetApp.getActive()
+        if (ss.getActiveSheet().getName() !== 'Intencje') {
+            throw new Error("Przełącz się na arkusz 'Intencje'")
+        }
         let usersSheet = ss.getSheetByName('Uczestnicy')
         if (usersSheet === null) {
             throw new Error("Sheet not found")
@@ -144,7 +188,7 @@ function assignIntentions(){
         let usersRange = usersSheet.getRange("B3:B")
         let usersValues = usersRange.getValues()
         let usersLength = usersValues.length
-        let intentionsRange = Utils.getFilteredValues(ss, intentionsSheet).slice(1)
+        let intentionsRange = SheetOperations.getFilteredValues(ss, intentionsSheet).slice(1)
         let intentionsLength = intentionsRange.length
         let intentionsUUID = intentionsRange.map(value => value[0])
         let usersShuffled = usersValues
@@ -160,7 +204,7 @@ function assignIntentions(){
         let unassigned = intentionsLength % usersLength
         let last = 0
         for (let user of usersShuffled) {
-            let intentions : any[]
+            let intentions: any[]
             if (unassigned > 0) {
                 intentions = intentionsUUIDShuffled.slice(last, last + assigned + 1)
                 last += assigned + 1
@@ -178,33 +222,49 @@ function assignIntentions(){
                 }
             }
         }
-        Utils.showDialog("Przypisano intencje", null, null, "Przypisano intencje.")
+        UIOperations.showDialog("Przypisano intencje", null, null, "Przypisano intencje.")
     } catch (e: any) {
         if (e instanceof Error) {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
         } else {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
         }
     }
 }
 
-function sendEmails(){
-    let template = HtmlService.createTemplateFromFile('src/SendEmails')
-    template.last_text = Utils.getVariable('last_text')
-    let html = template.evaluate().setWidth(400).setHeight(650)
-    SpreadsheetApp.getUi().showModalDialog(html, 'Wyślij maile')
+function sendEmails() : void {
+    try {
+        let ss = SpreadsheetApp.getActive()
+        if (ss.getActiveSheet().getName() !== 'Intencje') {
+            throw new Error("Przełącz się na arkusz 'Intencje'")
+        }
+        let template = HtmlService.createTemplateFromFile('src/templates/SendEmails')
+        template.last_text = Variables.getVariable('last_text')
+        let html = template.evaluate().setWidth(400).setHeight(650)
+        SpreadsheetApp.getUi().showModalDialog(html, 'Wyślij maile')
+    } catch (e: any) {
+        if (e instanceof Error) {
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
+        } else {
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
+        }
+    }
+
 }
 
-function sendEmailsCallback(text: string) {
+function sendEmailsCallback(text: string) : void {
     try {
-        Utils.saveVariable('last_text', text);
-        let ss = SpreadsheetApp.getActive();
+        let ss = SpreadsheetApp.getActive()
+        if (ss.getActiveSheet().getName() !== 'Intencje') {
+            throw new Error("Przełącz się na arkusz 'Intencje'")
+        }
+        Variables.saveVariable('last_text', text);
         let sheet = ss.getSheetByName('Intencje');
         if (sheet === null) {
             throw new Error("Sheet not found");
         }
         let range = sheet.getRange("A2:I");
-        let values = Utils.getFilteredValues(ss, sheet).slice(1);
+        let values = SheetOperations.getFilteredValues(ss, sheet).slice(1);
 
         let names = values.map(value => value[3]);
         let intentions = values.map(value => value[5]);
@@ -226,11 +286,11 @@ function sendEmailsCallback(text: string) {
 
         // Use groupedData for further processing
         for (let email in groupedData) {
-            let dateRange = Utils.getRangeArray() as string[];
+            let dateRange = SheetOperations.getRangeArray() as readonly string[];
             dateRange = dateRange.map(date => date.replace(/-/g, "."));
             let names = groupedData[email].names;
             let intentions = groupedData[email].intentions;
-            let mailTemplate = HtmlService.createTemplateFromFile('src/EmailTemplate');
+            let mailTemplate = HtmlService.createTemplateFromFile('src/templates/EmailTemplate');
             mailTemplate.names = names;
             mailTemplate.intentions = intentions;
             mailTemplate.text = text;
@@ -243,35 +303,39 @@ function sendEmailsCallback(text: string) {
                 name: "Modlitwa wstawiennicza MOST"
             })
         }
-        Utils.showDialog("Wysłano maile", null, null, "Wysłano maile.");
+        UIOperations.showDialog("Wysłano maile", null, null, "Wysłano maile.");
 
     } catch (e: any) {
         if (e instanceof Error) {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
         } else {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
         }
     }
 }
 
-function generateIntentionsDoc(){
-    try{
-        let rangeDate = Utils.getRange()
-        let doc = DocumentApp.create(`Intencje_${rangeDate}`)
+function generateIntentionsDoc() : void {
+    try {
         let ss = SpreadsheetApp.getActive()
+        if (ss.getActiveSheet().getName() !== 'Intencje') {
+            throw new Error("Przełącz się na arkusz 'Intencje'")
+        }
+        let rangeDate = SheetOperations.getRange()
+        let doc = DocumentApp.create(`Intencje_${rangeDate}`)
+
         let sheet = ss.getSheetByName('Intencje')
         if (sheet === null) {
             throw new Error("Sheet not found")
         }
         ss.getEditors().forEach(editor => doc.addEditor(editor))
-        let filteredBody = Utils.getFilteredValues(SpreadsheetApp.getActive(), sheet).slice(1)
+        let filteredBody = SheetOperations.getFilteredValues(SpreadsheetApp.getActive(), sheet).slice(1)
         let mappedBody = filteredBody.map(value => [value[3], value[5]])
-        
+
         let header = doc.addHeader().setText(`Intencje z zakresu: ${rangeDate}`)
         interface DocumentStyle {
             [key: string]: string | number | boolean
         }
-        let style : DocumentStyle = {};
+        let style: DocumentStyle = {};
         style[DocumentApp.Attribute.FONT_FAMILY] = 'Calibri';
         style[DocumentApp.Attribute.FONT_SIZE] = 14;
         style[DocumentApp.Attribute.BOLD] = true;
@@ -280,21 +344,20 @@ function generateIntentionsDoc(){
         doc.getBody().setText("Módlmy się w intencjach przesłanych grupie modlitwy wstawienniczej:")
         let nextParagraph = doc.getBody().appendParagraph("")
         for (let value of mappedBody) {
-            let style : DocumentStyle = {};
+            let style: DocumentStyle = {};
             style[DocumentApp.Attribute.BOLD] = true;
             let bullet = doc.getBody().appendListItem(`${value[0]}: `).setAttributes(style)
             style[DocumentApp.Attribute.BOLD] = false;
             bullet.appendText(`${value[1]}`).setAttributes(style)
         }
         // let listItems = mappedBody.map(value => doc.getBody().appendListItem())
-        Utils.openUrl(doc.getUrl())
+        UIOperations.openUrl(doc.getUrl())
     } catch (e: any) {
         if (e instanceof Error) {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + e.message)
         } else {
-            Utils.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
+            UIOperations.showDialog("Błąd", null, "Wystąpił błąd: " + String(e))
         }
     }
 
 }
-
