@@ -21,7 +21,7 @@ namespace Variables {
       }
     
       const MW_VARIABLES = 'MW_VARIABLES';
-      export function getVariable(VARIABLE_NAME : string) : void {
+      export function getVariable(VARIABLE_NAME : string) : string {
         let sheet = SpreadsheetApp.getActive().getSheetByName(MW_VARIABLES)
         if (sheet === null) {
           throw new Error("Sheet not found")

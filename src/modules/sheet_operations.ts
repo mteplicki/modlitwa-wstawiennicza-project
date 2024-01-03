@@ -1,3 +1,5 @@
+import Utils from "./utils";
+
 namespace SheetOperations {
     export function getRange() : string {
         let sheet = SpreadsheetApp.getActive().getSheetByName('Intencje')
@@ -51,7 +53,7 @@ namespace SheetOperations {
         return filter
       }
     
-      export function parseIntentionGmail(intentions_all_sheet: GoogleAppsScript.Spreadsheet.Sheet | null, unstored_message: GoogleAppsScript.Gmail.GmailMessage): readonly [string, string, string] {
+      export function parseIntentionGmail(unstored_message: GoogleAppsScript.Gmail.GmailMessage): readonly [string, string, string] {
         
         let intentions_split = unstored_message.getPlainBody().split('\r\n\r\n--- Intencja: ---\r\n\r\n');
     
@@ -62,17 +64,15 @@ namespace SheetOperations {
         return [date, name, intention];
       }
     
-      export function insertIntention(date: string, name: string, intention: string, intentions_all_sheet: GoogleAppsScript.Spreadsheet.Sheet | null = null, za_parafian: boolean = false) {
+      export function insertIntention(date: string, name: string, intention: string, intentions_all_sheet: GoogleAppsScript.Spreadsheet.Sheet | null = null, cyclic_uuid: string  = "") {
         intentions_all_sheet = intentions_all_sheet === null ? SpreadsheetApp.getActive().getSheetByName('Intencje') : intentions_all_sheet;
         intentions_all_sheet?.insertRowBefore(3);
         let range = intentions_all_sheet?.getRange("A3:I3");
         let deleted = "FALSE";
         let intention_corrected = intention;
         let uuid = Utilities.getUuid();
-        let za_parafian_string = za_parafian ? "TRUE" : "FALSE";
     
-        range?.setValues([[uuid, date, date, name, intention, intention_corrected, deleted, "", za_parafian_string]]);
-        // range?.protect();  
+        range?.setValues([[uuid, date, date, name, intention, intention_corrected, deleted, "", cyclic_uuid]]);
       }
     
     
@@ -88,18 +88,24 @@ namespace SheetOperations {
         return [...Array(size).keys()].map(i => i + startAt);
       }
     
-      export function insertZaParafian(intentions_all_sheet: GoogleAppsScript.Spreadsheet.Sheet) : void {
+      export function insertCykliczneIntecje(intentions_all_sheet: GoogleAppsScript.Spreadsheet.Sheet) : void {
         let filtered_values = getFilteredValues(SpreadsheetApp.getActive(), intentions_all_sheet).slice(1);
-        let za_parafian = filtered_values.filter(value => value[8] === "TRUE");
-        if (za_parafian.length === 0) {
-            let date = getRangeArray()[1];
-            date = date + " 00:00:00";
-            insertIntention(date, "-", "Za parafian", intentions_all_sheet, true);
-            refreshFilter();
-        } else if (za_parafian.length > 1) {
-            let exclude_uuids = za_parafian.map(value => value[0]).slice(1);
-            refreshFilter(exclude_uuids);
+        let [, cykliczne_arkusz] = Utils.getIntencjeCykliczne();
+        let cykliczne_values = cykliczne_arkusz.getRange("A3:C").getValues() as string[][];
+        let cykliczne_values_filtered = cykliczne_values.filter(value => value[0] !== "");
+        let exclude_uuids : string[] = []
+        for (let values of cykliczne_values_filtered) {
+          let [uuid, name, intention] = values;
+          let intentions_present = filtered_values.filter(value => value[8].includes(uuid));
+          if (intentions_present.length === 0) {
+              let date = getRangeArray()[1];
+              date = date + " 00:00:00";
+              insertIntention(date, name, intention, intentions_all_sheet, uuid);
+          } else if (intentions_present.length > 1) {
+              exclude_uuids = exclude_uuids.concat(intentions_present.map(value => value[0]).slice(1))
+          }
         }
+        refreshFilter(exclude_uuids);
       }
 }
 

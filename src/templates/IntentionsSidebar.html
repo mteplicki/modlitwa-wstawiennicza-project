@@ -13,14 +13,11 @@
   <body>
     <div id="Uczestnicy" class="vertical">
         <h1 class="text-4xl font-extrabold">Uczestnicy</h1>
-        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.addUser()">
-            Dodaj użytkownika
+        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.addDefaultIntention()">
+            Dodaj domyślną intencję
         </button>
-        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.removeUser()">
-            Usuń użytkownika
-        </button>
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.sendMail()">
-            Wyślij maila
+        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.removeDefaultIntention()">
+            Usuń domyślną intencję
         </button>
     </div>
     <style>

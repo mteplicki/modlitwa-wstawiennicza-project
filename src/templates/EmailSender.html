@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <base target="_top">
+    <script src="https://cdn.tailwindcss.com"></script>    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+    <script src="https://stevenlevithan.com/assets/misc/date.format.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Use a templated HTML printing scriptlet to import common stylesheet -->
+    <style>
+        .horizontal {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+            padding: 10px;
+        }
+        .vertical {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: left;
+            padding: 10px;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="vertical">
+        <label for="email" class="block mb-2 text-sm font-medium text-gray-900">Email</label>
+        <input type="text" id="email" class="bg-gray-50 border border-gray-300 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="anna.kowalska@gmail.com" value=<?=email?> required>
+        <label for="subject" class="block mb-2 text-sm font-medium text-gray-900">Temat</label>
+        <input type="text" id="subject" class="bg-gray-50 border border-gray-300 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Temat wiadomości" required>
+        <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900">Wiadomość</label>
+        <textarea id="large-input" rows="4" class="block p-2.5 w-full text-sm text-white bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Napisz swojego maila"></textarea>        
+        <div class="horizontal">
+            <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onclick="myFunction()" title="Akceptuj"> Akceptuj </button>
+            <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.host.close()" title="Anuluj"> Odrzuć </button>
+        </div>
+    </div>
+    <script>
+
+
+        function myFunction() {
+            let email = document.getElementById("email").value;
+            let subject = document.getElementById("subject").value;
+            let intention = document.getElementById("large-input").value;
+            google.script.run.withSuccessHandler(function(){google.script.host.close();}).sendMailCallback(email, subject, intention);
+        }
+    </script>
+
+  </body>
+</html>
