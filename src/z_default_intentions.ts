@@ -7,7 +7,7 @@ import EmailOperations from "./modules/email_operations";
 function showDefaultIntentionsSidebar(): void {
     try {
         Logger.log("showUsersSidebar");
-        let [ss, sheet] = Utils.getActiveIntencjeOgólneOrCykliczne();
+        let [ss, sheet] = Utils.getActiveIntencjeOgolneOrCykliczne();
         let widget = HtmlService.createHtmlOutputFromFile(
             "src/templates/IntentionsSidebar",
         ).setTitle("Modlitwa wstawiennicza MOST");
@@ -20,9 +20,9 @@ function showDefaultIntentionsSidebar(): void {
 function addDefaultIntention() {
     try {
         Logger.log("addDefaultIntention");
-        let [ss, sheet] = Utils.getActiveIntencjeOgólneOrCykliczne();
+        let [ss, sheet] = Utils.getActiveIntencjeOgolneOrCykliczne();
         let template = HtmlService.createTemplateFromFile(
-            "src/templates/AddIntention",
+            "src/templates/AddDefaultIntention",
         )
         template.sheet = sheet.getName()
         let sheetName = sheet.getName() === "Intencje-ogólne" ? "intencję ogólną" : "intencję cykliczną"
@@ -38,8 +38,11 @@ function addDefaultIntentionCallback(sheetName : string, name : string, intentio
     try {
         Logger.log("addDefaultIntentionCallback");
         let [ss, sheet] = Utils.getActiveSheetByName(sheetName);
-        sheet.insertRowBefore(3);
+        sheet.insertRowAfter(2)
         let range = sheet.getRange("A3:C3");
+        range.clearFormat();
+        range.setFontSize(11);
+        range.setVerticalAlignment("middle");
         range.setValues([[Utilities.getUuid(), name, intention]]);
         UIOperations.showDialog('Sukces', null, null, `Dodano intencję do arkusza ${sheetName}`)
     } catch (e: any) {
@@ -50,7 +53,7 @@ function addDefaultIntentionCallback(sheetName : string, name : string, intentio
 function removeDefaultIntention() {
     try {
         Logger.log("removeDefaultIntention");
-        let [ss, sheet] = Utils.getActiveIntencjeOgólneOrCykliczne();
+        let [ss, sheet] = Utils.getActiveIntencjeOgolneOrCykliczne();
         let currentRange = sheet.getActiveRange();
         if (currentRange === null) {
             throw new Error("Nie wybrano zakresu. Wybierz intencję do usunięcia.");

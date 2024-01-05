@@ -46,21 +46,21 @@ namespace Utils {
 
     export const getIntencje : SheetType = () => getSheetByName("Intencje")
     export const getUczestnicy : SheetType = () => getSheetByName("Uczestnicy")
-    export const getIntencjeOgólne : SheetType = () => getSheetByName("Intencje-ogólne")
+    export const getIntencjeOgolne : SheetType = () => getSheetByName("Intencje-ogólne")
     export const getIntencjeCykliczne : SheetType = () => getSheetByName("Intencje-cykliczne")
 
     export const getActiveIntencje : SheetType = () => getActiveSheetByName("Intencje")
     export const getActiveUczestnicy : SheetType = () => getActiveSheetByName("Uczestnicy")
-    export const getActiveIntencjeOgólne : SheetType = () => getActiveSheetByName("Intencje-ogólne")
+    export const getActiveIntencjeOgolne : SheetType = () => getActiveSheetByName("Intencje-ogólne")
     export const getActiveIntencjeCykliczne : SheetType = () => getActiveSheetByName("Intencje-cykliczne")
 
-    export const getActiveIntencjeOgólneOrCykliczne : SheetType = () => {
+    export const getActiveIntencjeOgolneOrCykliczne : SheetType = () => {
         let name = SpreadsheetApp.getActive().getActiveSheet().getName()
         switch (name) {
             case "Intencje-ogólne":
-                return getActiveIntencjeOgólne()
+                return Utils.getActiveIntencjeOgolne()
             case "Intencje-cykliczne":
-                return getActiveIntencjeCykliczne()
+                return Utils.getActiveIntencjeCykliczne()
             default:
                 throw new Error("Nieprawidłowy arkusz - musi być Intencje-ogólne lub Intencje-cykliczne")
         }

@@ -41,20 +41,16 @@
             
             let name = document.getElementById("name").value;
             let intention= document.getElementById("intention").value;
-            google.script.run.withSuccessHandler(function(){google.script.host.close();}).addDefaultIntentionCallback(<?=sheetName?>, email, checkbox);
+            google.script.run.withSuccessHandler(function(){google.script.host.close();}).addDefaultIntentionCallback(<?=sheet?>, name, intention);
         }
     </script>
   </head>
   <body>
     <div class="vertical">
         <label for="name" class="block mb-2 text-sm font-medium text-gray-900">Imię</label>
-        <input type="text" id="name" class="bg-gray-50 border border-gray-300 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Anna" required>
+        <input type="text" id="name" class="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Anna" required>
         <label for="intention" class="block mb-2 text-sm font-medium text-gray-900">Intencja</label>
-        <input type="text" id="intention" class="bg-gray-50 border border-gray-300 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="anna.kowalska@gmail.com" required>
-        <div class="flex items-center mb-4" style="padding-top: 5px;">
-            <input id="default-checkbox" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500  focus:ring-2 ">
-            <label style="padding-left: 5px;" for="default-checkbox" class="ms-2 text-sm font-medium text-gray-900">Wyślij wiadomość powitalną</label>
-        </div>
+        <input type="text" id="intention" class="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="anna.kowalska@gmail.com" required>
         <div class="horizontal">
             <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onclick="myFunction()" title="Akceptuj"> Akceptuj </button>
             <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.host.close()" title="Anuluj"> Odrzuć </button>

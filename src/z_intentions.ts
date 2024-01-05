@@ -250,7 +250,7 @@ function sendEmailsCallback(text: string): void {
     }
 
     function getDefaultIntention() : string[][] {
-        let [ss, sheet] = Utils.getActiveSheetByName("Intencje-ogólne");
+        let [ss, sheet] = Utils.getIntencjeOgolne();
         let range = sheet.getRange("A2:C");
         let values = range.getValues().slice(1) as string[][];
         return values;
@@ -317,7 +317,7 @@ function sendEmailsCallback(text: string): void {
 
 function generateIntentionsDoc(): void {
     function getDefaultIntention() : string[][] {
-        let [ss, sheet] = Utils.getActiveSheetByName("Intencje-ogólne");
+        let [ss, sheet] = Utils.getIntencjeOgolne();
         let range = sheet.getRange("A2:C");
         let values = range.getValues().slice(1) as string[][];
         return values;
