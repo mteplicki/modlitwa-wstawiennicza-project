@@ -20,6 +20,7 @@ function showUsersSidebar(): void {
 }
 
 function addUser() {
+    UIOperations.showLoading();
     try {
         Logger.log("addUser");
         let ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -53,6 +54,7 @@ function addUserCallback(name : string, email : string, checked : boolean){
 }
 
 function removeUser() {
+    UIOperations.showLoading();
     try {
         Logger.log("removeUser");
         let [, sheet] = Utils.getActiveSheetByName("Uczestnicy");
@@ -74,17 +76,25 @@ function removeUser() {
 }
 
 function sendMail() {
+    UIOperations.showLoading();
     try{
         Logger.log("sendMail");
         let [, sheet] = Utils.getActiveSheetByName("Uczestnicy");
         let range = sheet.getActiveRange();
         if (!range) {
-            throw new Error("Zaznacz wiersz do usunięcia");
+            throw new Error("Zaznacz wiersz do wysłania");
         }
-        let row = range.getRow();
-        let name = sheet.getRange(row, 1).getValue();
-        let email = sheet.getRange(row, 2).getValue();
-
+        if (range.getRow() < 3) {
+            throw new Error("Nie możesz zaznaczyć wiersza nagłówka");
+        }
+        let email = ""
+        let name = ""
+        for (let i = 0; i < range.getNumRows(); i++) {
+            let row = range.getRow() + i;
+            email += `${sheet.getRange(row, 2).getValue()},`;
+        }
+        // remove last comma
+        email = email.substring(0, email.length - 1);
         let template = HtmlService.createTemplateFromFile("src/templates/EmailSender");
         template.email = email;
         let html = template.evaluate();
@@ -95,11 +105,13 @@ function sendMail() {
     }
 }
 
-function sendMailCallback(email : string, subject : string, text : string){
+function sendMailCallback(emails : string, subject : string, text : string){
     try {
         Logger.log("sendMailCallback");
-        EmailOperations.sendEmail({to: email, subject: subject, text: text});
-        UIOperations.showDialog("Sukces", null, null, "Wiadomość została wysłana");
+        for (let email of emails.split(",").map((email : string) => email.trim()).filter((email : string) => email !== "")) {
+            EmailOperations.sendEmail({to: email, subject: subject, text: text});
+        }
+        UIOperations.showDialog("Sukces", null, null, "Wiadomości zostały wysłane");
     } catch (e: any) {
         Utils.handleError(e);
     }

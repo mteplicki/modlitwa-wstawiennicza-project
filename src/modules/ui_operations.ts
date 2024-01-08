@@ -29,10 +29,19 @@ namespace UIOperations {
         5: "Piątek",
         6: "Sobota",
       };
+
+      export function showLoading(){
+        let ui = HtmlService.createTemplateFromFile('src/templates/Loading')
+        let evaluate_ui = ui
+          .evaluate()
+          .setWidth(350)
+          .setHeight(250);
+        SpreadsheetApp.getUi().showModalDialog(evaluate_ui, "Ładowanie...");
+      }
     
       export function openUrl( url : string ) : void{
         const html = `<html>
-      <a id='url' href="${url}">Kliknih tutaj</a>
+      <a id='url' href="${url}">${url}</a>
         <script>
            var winRef = window.open("${url}");
            winRef ? google.script.host.close() : window.alert('Skonfiguruj przeglądarkę, aby pozwalała na przekierowanie do ${url}') ;

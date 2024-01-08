@@ -18,6 +18,7 @@ function showDefaultIntentionsSidebar(): void {
 }
 
 function addDefaultIntention() {
+    UIOperations.showLoading();
     try {
         Logger.log("addDefaultIntention");
         let [ss, sheet] = Utils.getActiveIntencjeOgolneOrCykliczne();
@@ -51,6 +52,7 @@ function addDefaultIntentionCallback(sheetName : string, name : string, intentio
 }
 
 function removeDefaultIntention() {
+    UIOperations.showLoading();
     try {
         Logger.log("removeDefaultIntention");
         let [ss, sheet] = Utils.getActiveIntencjeOgolneOrCykliczne();
@@ -58,8 +60,17 @@ function removeDefaultIntention() {
         if (currentRange === null) {
             throw new Error("Nie wybrano zakresu. Wybierz intencję do usunięcia.");
         }
-        let currentRow = currentRange.getRow();
-        sheet.deleteRow(currentRow);
+        if (currentRange.getRow() < 3) {
+            throw new Error("Nie można usunąć nagłówka.");
+        }
+        if (currentRange.getNumRows() !== 1) {
+            throw new Error("Wybierz tylko jeden wiersz.");
+        }
+        Logger.log(currentRange.getRow())
+        let row = currentRange.getRow()
+        Logger.log(row)
+        sheet.deleteRow(row);
+        Logger.log("sukces!")
         UIOperations.showDialog('Sukces', null, null, `Usunięto intencję z arkusza ${sheet.getName()}`)
     } catch (e: any) {
         Utils.handleError(e);

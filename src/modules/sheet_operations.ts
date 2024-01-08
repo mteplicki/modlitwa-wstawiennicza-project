@@ -10,11 +10,10 @@ namespace SheetOperations {
         return value.split(": ")[1].split("[")[0].trim()
       }
     
-      export function getRangeArray(): readonly [string, string] {
-        let range = getRange()
+      export function getRangeArray(range : string): readonly [string, string] {
         let range_array = range.split(" - ")
-        let start = range_array[0]
-        let end = range_array[1]
+        let start = range_array[0].trim()
+        let end = range_array[1].trim()
         return [start, end]
       }
     
@@ -28,7 +27,7 @@ namespace SheetOperations {
         }
         let range = sheet.getRange("A2:I")
         let filter = range.createFilter()
-        let [start, end] = getRangeArray()
+        let [start, end] = getRangeArray(SheetOperations.getRange())
         start = start + " 00:00:00"
         end = end + " 23:59:59"
         let start_date = new Date(start)
@@ -78,8 +77,20 @@ namespace SheetOperations {
     
     
       export function getFilteredValues(ss : GoogleAppsScript.Spreadsheet.Spreadsheet, sheet : GoogleAppsScript.Spreadsheet.Sheet) : string[][] {
-        var url = "https://docs.google.com/spreadsheets/d/" + ss.getId() + "/gviz/tq?tqx=out:csv&gid=" + sheet.getSheetId() + "&access_token=" + ScriptApp.getOAuthToken();
-        var res = UrlFetchApp.fetch(url);
+        Logger.log("Pobieranie intencji")
+        Logger.log(`ss.getId() : ${ss.getId()}`)
+        Logger.log(`sheet.getSheetId() : ${sheet.getSheetId()}`)
+        Logger.log(`sheet.getName() : ${sheet.getName()}`)
+        Logger.log(`ScriptApp.getOAuthToken() : ${ScriptApp.getOAuthToken()}`)
+        Logger.log(`url: https://docs.google.com/spreadsheets/d/${ss.getId()}/gviz/tq?tqx=out:csv&gid=${sheet.getSheetId()}`)
+        var url = "https://docs.google.com/spreadsheets/d/" + ss.getId() + "/gviz/tq?tqx=out:csv&gid=" + sheet.getSheetId();
+        var res = UrlFetchApp.fetch(url,{
+            muteHttpExceptions: true,
+            method: "get",
+            headers: {
+              'Authorization': 'Bearer ' + ScriptApp.getOAuthToken()
+            }
+          });
         var values = Utilities.parseCsv(res.getContentText());
         return values
       }
@@ -88,8 +99,9 @@ namespace SheetOperations {
         return [...Array(size).keys()].map(i => i + startAt);
       }
     
-      export function insertCykliczneIntecje(intentions_all_sheet: GoogleAppsScript.Spreadsheet.Sheet) : void {
+      export function insertCykliczneIntecje(intentions_all_sheet: GoogleAppsScript.Spreadsheet.Sheet) : string[] {
         let filtered_values = getFilteredValues(SpreadsheetApp.getActive(), intentions_all_sheet).slice(1);
+        Logger.log(`Pobrano ${filtered_values.length} intencji`)
         let [, cykliczne_arkusz] = Utils.getIntencjeCykliczne();
         let cykliczne_values = cykliczne_arkusz.getRange("A3:C").getValues() as string[][];
         let cykliczne_values_filtered = cykliczne_values.filter(value => value[0] !== "");
@@ -98,14 +110,17 @@ namespace SheetOperations {
           let [uuid, name, intention] = values;
           let intentions_present = filtered_values.filter(value => value[8].includes(uuid));
           if (intentions_present.length === 0) {
-              let date = getRangeArray()[1];
+              let date = getRangeArray(SheetOperations.getRange())[1];
               date = date + " 00:00:00";
               insertIntention(date, name, intention, intentions_all_sheet, uuid);
           } else if (intentions_present.length > 1) {
-              exclude_uuids = exclude_uuids.concat(intentions_present.map(value => value[0]).slice(1))
+              intentions_present.sort((a, b) => new Date(b[1]).getTime() - new Date(a[1]).getTime());
+              Logger.log(intentions_present)
+              let intentions_excluded_uuids = intentions_present.map(value => value[0]).slice(1);
+              exclude_uuids = exclude_uuids.concat(intentions_excluded_uuids)
           }
         }
-        refreshFilter(exclude_uuids);
+        return exclude_uuids
       }
 }
 

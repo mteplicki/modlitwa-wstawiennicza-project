@@ -6,15 +6,20 @@ import EmailOperations from "./modules/email_operations";
 
 function updateDateRange(range: string): void {
     try {
-        const [ss, sheet] = Utils.getActiveSheetByName("Intencje");
-        const [start, end] = SheetOperations.getRangeArray();
+        Logger.log(range);
+        const [,sheet] = Utils.getActiveSheetByName("Intencje");
+        const [start, end] = SheetOperations.getRangeArray(range);
         const start_day = UIOperations.dayWeek[new Date(start).getDay()];
         const end_day = UIOperations.dayWeek[new Date(end).getDay()];
+        Logger.log(`start: ${start}; end: ${end}`);
+        Logger.log(`start_day_number: ${new Date(start).getDay()}, end_day_number: ${new Date(end).getDay()}`);
+        Logger.log(`start_day: ${start_day}, end_day: ${end_day}`)
         sheet.getRange("A1:H1").setValue(
             `Intencje z zakresu: ${range} [${start_day} - ${end_day}]`,
         );
         SheetOperations.refreshFilter();
-        SheetOperations.insertCykliczneIntecje(sheet);
+        let exclude_uuids = SheetOperations.insertCykliczneIntecje(sheet);
+        SheetOperations.refreshFilter(exclude_uuids);
     } catch (e: any) {
         Utils.handleError(e);
     }
@@ -25,6 +30,7 @@ function showDateRangePicker(): void {
 }
 
 function refresh(): void {
+    UIOperations.showLoading();
     let error: string | null = null;
     let unread: any[] = [];
     try {
@@ -34,6 +40,7 @@ function refresh(): void {
             'subject:"[Skrzynka intencji] Nowa intencja" -label:stored_sheet',
         );
         unstored.reverse();
+        Logger.log(`Udało się pobrać ${unstored.length} wiadomości.`)
 
         for (let unstored_thread of unstored) {
             if (!Utils.isTimeLeft(START)) {
@@ -53,11 +60,16 @@ function refresh(): void {
             unstored_thread.addLabel(GmailApp.getUserLabelByName("stored_sheet"));
             unstored_thread.markRead();
         }
+        Logger.log("Zapisano intencje z poczty.");
         unread = GmailApp.search(
             '-subject:"[Skrzynka intencji] Nowa intencja" is:unread',
         );
+        Logger.log(`Znaleziono ${unread.length} nieprzeczytanych maili.`);
         SheetOperations.refreshFilter();
-        SheetOperations.insertCykliczneIntecje(intentions_all_sheet);
+        Logger.log("Odświeżono filtr.");
+        let exclude_uuids = SheetOperations.insertCykliczneIntecje(intentions_all_sheet);
+        SheetOperations.refreshFilter(exclude_uuids);
+        Logger.log("Dodano cykliczne intencje.");
     } catch (e: any) {
         if (e instanceof Error) {
             Logger.log(e.message);
@@ -111,6 +123,7 @@ function showIntentionSidebar(): void {
 }
 
 function deleteIntention(): void {
+    UIOperations.showLoading();
     try {
         //not deleting intention, just hiding it by setting "deleted" column to true
         let [_, sheet] = Utils.getActiveSheetByName("Intencje");
@@ -145,6 +158,7 @@ function deleteIntention(): void {
 }
 
 function assignIntentions(): void {
+    UIOperations.showLoading();
     try {
         let [ss, usersSheet] = Utils.getSheetByName("Uczestnicy");
         let [, intentionsSheet] = Utils.getActiveSheetByName("Intencje");
@@ -215,6 +229,7 @@ function assignIntentions(): void {
 }
 
 function sendEmails(): void {
+    UIOperations.showLoading();
     try {
         let [ss, sheet] = Utils.getActiveSheetByName("Intencje");
         let template = HtmlService.createTemplateFromFile(
@@ -295,7 +310,7 @@ function sendEmailsCallback(text: string): void {
 
         // Use groupedData for further processing
         for (let email in groupedData) {
-            let dateRange = SheetOperations.getRangeArray() as readonly string[];
+            let dateRange = SheetOperations.getRangeArray(SheetOperations.getRange()) as readonly string[];
             dateRange = dateRange.map((date) => date.replace(/-/g, "."));
             let names = groupedData[email].names;
             let intentions = groupedData[email].intentions;
@@ -322,6 +337,7 @@ function generateIntentionsDoc(): void {
         let values = range.getValues().slice(1) as string[][];
         return values;
     }
+    UIOperations.showLoading();
     try {
         let [ss, sheet] = Utils.getActiveSheetByName("Intencje");
         let rangeDate = SheetOperations.getRange();
