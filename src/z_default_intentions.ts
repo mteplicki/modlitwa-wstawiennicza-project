@@ -8,9 +8,9 @@ function showDefaultIntentionsSidebar(): void {
     try {
         Logger.log("showUsersSidebar");
         let [ss, sheet] = Utils.getActiveIntencjeOgolneOrCykliczne();
-        let widget = HtmlService.createHtmlOutputFromFile(
+        let widget = HtmlService.createTemplateFromFile(
             "src/templates/IntentionsSidebar",
-        ).setTitle("Modlitwa wstawiennicza MOST");
+        ).evaluate().setTitle("Modlitwa wstawiennicza MOST");
         SpreadsheetApp.getUi().showSidebar(widget);
     } catch (e: any) {
         Utils.handleError(e);

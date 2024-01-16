@@ -10,9 +10,9 @@ function showUsersSidebar(): void {
         if (ss.getActiveSheet().getName() !== "Uczestnicy") {
             throw new Error("Przełącz się na arkusz 'Uczestnicy'");
         }
-        let widget = HtmlService.createHtmlOutputFromFile(
+        let widget = HtmlService.createTemplateFromFile(
             "src/templates/UsersSidebar",
-        ).setTitle("Modlitwa wstawiennicza MOST");
+        ).evaluate().setTitle("Modlitwa wstawiennicza MOST");
         SpreadsheetApp.getUi().showSidebar(widget);
     } catch (e: any) {
         Utils.handleError(e);
@@ -27,9 +27,9 @@ function addUser() {
         if (ss.getActiveSheet().getName() !== "Uczestnicy") {
             throw new Error("Przełącz się na arkusz 'Uczestnicy'");
         }
-        let widget = HtmlService.createHtmlOutputFromFile(
+        let widget = HtmlService.createTemplateFromFile(
             "src/templates/AddUser",
-        ).setTitle("Modlitwa wstawiennicza MOST");
+        ).evaluate().setTitle("Modlitwa wstawiennicza MOST");
         SpreadsheetApp.getUi().showModalDialog(widget, "Dodaj uczestnika");
     } catch (e: any) {
         Utils.handleError(e);

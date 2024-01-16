@@ -4,7 +4,8 @@
   "description": "",
   "main": "Kod.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tailwindcss -i src/templates/input.css -o src/templates/output.html -c src/templates/tailwind.config.js && clasp push"
   },
   "author": "",
   "license": "ISC",

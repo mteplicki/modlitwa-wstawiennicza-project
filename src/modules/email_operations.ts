@@ -1,5 +1,5 @@
 namespace EmailOperations {
-    export interface EmailType {
+    export type EmailType = {
         to: string,
         subject: string,
         name?: string,

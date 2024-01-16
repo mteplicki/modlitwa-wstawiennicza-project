@@ -113,9 +113,9 @@ function insertDialog(): void {
 
 function showIntentionSidebar(): void {
     try {
-        let widget = HtmlService.createHtmlOutputFromFile(
+        let widget = HtmlService.createTemplateFromFile(
             "src/templates/AdminSidebar",
-        ).setTitle("Modlitwa wstawiennicza MOST");
+        ).evaluate().setTitle("Modlitwa wstawiennicza MOST");
         SpreadsheetApp.getUi().showSidebar(widget);
     } catch (e: any) {
         Utils.handleError(e);
@@ -235,7 +235,7 @@ function sendEmails(): void {
         let template = HtmlService.createTemplateFromFile(
             "src/templates/SendEmails",
         );
-        template.last_text = Variables.getVariable("last_text");
+        template.last_text = CacheService.getUserCache().get("last_text") || "";
         let html = template.evaluate().setWidth(400).setHeight(650);
         SpreadsheetApp.getUi().showModalDialog(html, "Wyślij maile");
     } catch (e: any) {
@@ -273,7 +273,7 @@ function sendEmailsCallback(text: string): void {
 
     try {
         let [ss, sheet] = Utils.getActiveSheetByName("Intencje");
-        Variables.saveVariable("last_text", text);
+        CacheService.getUserCache().put("last_text", text);
         let range = sheet.getRange("A2:I");
         let values = SheetOperations.getFilteredValues(ss, sheet).slice(1);
 

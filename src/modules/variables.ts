@@ -8,31 +8,48 @@ namespace Variables {
       return row
     }
     export function saveVariable(VARIABLE_NAME : string, value : string) : void {
-        let sheet = SpreadsheetApp.getActive().getSheetByName(MW_VARIABLES)
+        let sheet = SpreadsheetApp.getActive().getSheetByName(Ustawienia)
         if (sheet === null) {
           throw new Error("Sheet not found")
         }
         let last_text_range = getRowVariable(sheet, VARIABLE_NAME)
         try {
-          sheet.getRange(`B${last_text_range}`).setValue(value)
+          sheet.getRange(`C${last_text_range}`).setValue(value)
+          let cache = CacheService.getScriptCache()
+          cache.put(VARIABLE_NAME, value)
+          Logger.log(`Saved ${VARIABLE_NAME} with value ${value}`)
         } catch (e) {
           throw new Error("Variable not found")
         }
       }
     
-      const MW_VARIABLES = 'MW_VARIABLES';
-      export function getVariable(VARIABLE_NAME : string) : string {
-        let sheet = SpreadsheetApp.getActive().getSheetByName(MW_VARIABLES)
+      const Ustawienia = 'Ustawienia';
+      export function getVariable(VARIABLE_NAME : string) : string {    
+        try {
+          let value = CacheService.getScriptCache().get(VARIABLE_NAME) 
+          if (value !== null) {
+            return value
+          }
+          throw new Error("Variable not found")
+        } catch (e) {
+          throw new Error("Variable not found")
+        }
+      }
+
+      export function synchronizeWithCache() : void {
+        let sheet = SpreadsheetApp.getActive().getSheetByName(Ustawienia)
         if (sheet === null) {
           throw new Error("Sheet not found")
         }
-        let last_text_range = getRowVariable(sheet, VARIABLE_NAME)
-    
-        try {
-          let value = sheet.getRange(`B${last_text_range}`).getValue()
-          return value
-        } catch (e) {
-          throw new Error("Variable not found")
+        let range = sheet.getRange("A2:C")
+        let range_values = range.getValues() as [string,string,string][]
+        let cache = CacheService.getScriptCache()
+        for (let row of range_values) {
+          let [key, ,value] = row
+          if (key !== "") {
+            cache.put(key, value)
+            Logger.log(`Synchronized ${key} with value ${value}`)
+          }
         }
       }
 }

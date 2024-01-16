@@ -4,26 +4,30 @@
     <title>Modlitwa wstawiennicza</title>
     <meta charset="utf-8">
     <base target="_top">
-    <script src="https://cdn.tailwindcss.com"></script>    
+    <!-- <script src="https://cdn.tailwindcss.com"></script>     -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Use a templated HTML printing scriptlet to import common stylesheet -->
+    <script>
+        const runner = google.script.run.withFailureHandler(function(){window.alert("Błąd! Nie udało się uruchomić funkcji!")});
+    </script>
 
   </head>
   <body>
     <div id="Uczestnicy" class="vertical">
         <h1 class="text-4xl font-extrabold">Uczestnicy</h1>
-        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.addUser()">
+        <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onclick="runner.addUser()">
             Dodaj użytkownika
         </button>
-        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.removeUser()">
+        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="runner.removeUser()">
             Usuń użytkownika
         </button>
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.run.sendMail()">
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onclick="runner.sendMail()">
             Wyślij maila
         </button>
     </div>
     <style>
+        <?!= HtmlService.createHtmlOutputFromFile('src/templates/output.html').getContent() ?>
         body {
             width: 100%;
             box-sizing: border-box;
