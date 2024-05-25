@@ -15,8 +15,8 @@ namespace Variables {
         let last_text_range = getRowVariable(sheet, VARIABLE_NAME)
         try {
           sheet.getRange(`C${last_text_range}`).setValue(value)
-          let cache = CacheService.getScriptCache()
-          cache.put(VARIABLE_NAME, value)
+          let cache = PropertiesService.getDocumentProperties()
+          cache.setProperty(VARIABLE_NAME, value)
           Logger.log(`Saved ${VARIABLE_NAME} with value ${value}`)
         } catch (e) {
           throw new Error("Variable not found")
@@ -26,7 +26,7 @@ namespace Variables {
       const Ustawienia = 'Ustawienia';
       export function getVariable(VARIABLE_NAME : string) : string {    
         try {
-          let value = CacheService.getScriptCache().get(VARIABLE_NAME) 
+          let value = PropertiesService.getDocumentProperties().getProperty(VARIABLE_NAME)
           if (value !== null) {
             return value
           }
@@ -43,11 +43,11 @@ namespace Variables {
         }
         let range = sheet.getRange("A2:C")
         let range_values = range.getValues() as [string,string,string][]
-        let cache = CacheService.getScriptCache()
+        let cache = PropertiesService.getDocumentProperties()
         for (let row of range_values) {
           let [key, ,value] = row
           if (key !== "") {
-            cache.put(key, value)
+            cache.setProperty(key, value)
             Logger.log(`Synchronized ${key} with value ${value}`)
           }
         }

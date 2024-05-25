@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <base target="_top">
+    <!-- <base target="_top"> -->
     <!-- <script src="https://cdn.tailwindcss.com"></script>     -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
@@ -32,9 +32,11 @@
     <script>
         function myFunction() {
             let text = document.getElementById("large-input").value;
+            console.log(text);
             const dialog = document.getElementById('dialog-1');
             const runner = google.script.run.withSuccessHandler(function(){google.script.host.close();}).withFailureHandler(function(){window.alert("Błąd! Nie udało się uruchomić funkcji!");dialog.close();});
             dialog.showModal();
+            console.log("Sending emails");
             runner.sendEmailsCallback(text)
         }
         $(()=>document.getElementById("form1").addEventListener("submit", myFunction))
@@ -46,9 +48,9 @@
   </head>
   <body>
     <div class="vertical">
-        <form action="javascript:myFunction();"  id="form1">
+        <form action="" id="form1">
             <label for="large-input" class="block mb-2 text-sm font-medium text-gray-900">Wpisz treść</label>
-            <textarea id="large-input" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="Napisz wiadomość dla odbiorców intencji" required></textarea>
+            <textarea id="large-input" name="large-input" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="Napisz wiadomość dla odbiorców intencji" required></textarea>
         </form>   
         <div class="horizontal">
             <button type="submit" form="form1" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" title="Akceptuj"> Akceptuj </button>

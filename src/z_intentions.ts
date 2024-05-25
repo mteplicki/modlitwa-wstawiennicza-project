@@ -3,6 +3,7 @@ import Variables from "./modules/variables";
 import UIOperations from "./modules/ui_operations";
 import SheetOperations from "./modules/sheet_operations";
 import EmailOperations from "./modules/email_operations";
+import FirebaseInit from "./modules/firebase_init";
 
 function updateDateRange(range: string): void {
     try {
@@ -30,63 +31,7 @@ function showDateRangePicker(): void {
 }
 
 function refresh(): void {
-    UIOperations.showLoading();
-    let error: string | null = null;
-    let unread: any[] = [];
-    try {
-        let [ss, intentions_all_sheet] = Utils.getActiveSheetByName("Intencje");
-        let START = Date.now();
-        let unstored = GmailApp.search(
-            'subject:"[Skrzynka intencji] Nowa intencja" -label:stored_sheet',
-        );
-        unstored.reverse();
-        Logger.log(`Udało się pobrać ${unstored.length} wiadomości.`)
-
-        for (let unstored_thread of unstored) {
-            if (!Utils.isTimeLeft(START)) {
-                throw new Error(
-                    "Przekroczono czas wykonania skryptu. Nie wszystkie intencje zostały zapisane. Spróbuj ponownie.",
-                );
-            }
-            for (let unstored_message of unstored_thread.getMessages()) {
-                let [date, name, intention] = SheetOperations.parseIntentionGmail(unstored_message);
-                SheetOperations.insertIntention(
-                    date,
-                    name,
-                    intention,
-                    intentions_all_sheet,
-                );
-            }
-            unstored_thread.addLabel(GmailApp.getUserLabelByName("stored_sheet"));
-            unstored_thread.markRead();
-        }
-        Logger.log("Zapisano intencje z poczty.");
-        unread = GmailApp.search(
-            '-subject:"[Skrzynka intencji] Nowa intencja" is:unread',
-        );
-        Logger.log(`Znaleziono ${unread.length} nieprzeczytanych maili.`);
-        SheetOperations.refreshFilter();
-        Logger.log("Odświeżono filtr.");
-        let exclude_uuids = SheetOperations.insertCykliczneIntecje(intentions_all_sheet);
-        SheetOperations.refreshFilter(exclude_uuids);
-        Logger.log("Dodano cykliczne intencje.");
-    } catch (e: any) {
-        if (e instanceof Error) {
-            Logger.log(e.message);
-            error = e.message;
-        } else {
-            Logger.log(String(e));
-            error = String(e);
-        }
-    }
-    let nieprzyczytane_word = UIOperations.getNieprzeczytanychWord(unread.length);
-    let warning = unread.length > 0
-        ? `W poczcie znajdują się ${unread.length} ${nieprzyczytane_word}. Otwórz Gmail i przeczytaj je.`
-        : null;
-    let alert = error !== null ? "Wystąpił błąd: " + error : null;
-    let info = error === null ? "Odświeżono intencje." : null;
-    let DIALOG_TITLE = "Odświeżanie intencji";
-    UIOperations.showDialog(DIALOG_TITLE, warning, alert, info);
+    SheetOperations.refresh();
 }
 
 function insertFromDialog(date: string, name: string, intention: string): void {
@@ -183,7 +128,7 @@ function assignIntentions(): void {
         let last = 0;
         let set_intentionsUUIDShuffled = new Set([...intentionsUUIDShuffled]);
         for (let user of usersShuffled) {
-            let intentions: any[];
+            let intentions: string[];
             if (unassigned > 0) {
                 intentions = intentionsUUIDShuffled.slice(last, last + assigned + 1);
                 last += assigned + 1;
@@ -235,7 +180,8 @@ function sendEmails(): void {
         let template = HtmlService.createTemplateFromFile(
             "src/templates/SendEmails",
         );
-        template.last_text = CacheService.getUserCache().get("last_text") || "";
+        Logger.log(PropertiesService.getDocumentProperties().getProperty("last_text"));
+        template.last_text = PropertiesService.getDocumentProperties().getProperty("last_text") || "";
         let html = template.evaluate().setWidth(400).setHeight(650);
         SpreadsheetApp.getUi().showModalDialog(html, "Wyślij maile");
     } catch (e: any) {
@@ -271,9 +217,11 @@ function sendEmailsCallback(text: string): void {
         return values;
     }
 
+    Logger.log(text);
+
     try {
         let [ss, sheet] = Utils.getActiveSheetByName("Intencje");
-        CacheService.getUserCache().put("last_text", text);
+        PropertiesService.getDocumentProperties().setProperty("last_text", text);
         let range = sheet.getRange("A2:I");
         let values = SheetOperations.getFilteredValues(ss, sheet).slice(1);
 
@@ -308,6 +256,10 @@ function sendEmailsCallback(text: string): void {
             }
         }
 
+        let date = new Date();
+
+        let dateString = Utilities.formatDate(date, "GMT+1", "yyyy-MM-dd HH:mm:ss");
+
         // Use groupedData for further processing
         for (let email in groupedData) {
             let dateRange = SheetOperations.getRangeArray(SheetOperations.getRange()) as readonly string[];
@@ -323,8 +275,41 @@ function sendEmailsCallback(text: string): void {
                 intentions: intentions,
                 names: names,
             });
+            try {
+                FirebaseInit.firestore.createDocument(`intentions/${email}/dates/${dateString}`, {names : names, intentions : intentions, dateRange: dateRange});
+            } catch (e) {
+                Logger.log(e);
+            }
         }
+        const payload = JSON.stringify({
+            "data": {
+                "title": "Przydzielono nowe intencje",
+                "body": "Przydzielono dla Ciebie nowe intencje. Sprawdź aplikację."
+            },
+            "topic": "default-topic",
+            "webpush": {
+                "fcmOptions": {
+                    "link": "https://modlitwa-wstawiennicza-23992.web.app/intencje"
+                }
+            }
+        })
+        Logger.log("test:", payload)
+        const request = UrlFetchApp.getRequest("https://ttrxyguhmmkd6gzd3bu4evucbe0acjlx.lambda-url.eu-north-1.on.aws/sendMessage", {
+            method: "post",
+            payload: payload,
+            contentType: "application/json",
+            muteHttpExceptions: true
+        });
+        Logger.log(request);
+        const response = UrlFetchApp.fetch("https://ttrxyguhmmkd6gzd3bu4evucbe0acjlx.lambda-url.eu-north-1.on.aws/sendMessage", {
+            method: "post",
+            payload: payload,
+            contentType: "application/json",
+            muteHttpExceptions: true
+        });
+        Logger.log(response);
         UIOperations.showDialog("Wysłano maile", null, null, "Wysłano maile.");
+        
     } catch (e: any) {
         Utils.handleError(e);
     }
@@ -361,7 +346,7 @@ function generateIntentionsDoc(): void {
         let style: DocumentStyle = {};
         style[DocumentApp.Attribute.FONT_FAMILY] = "Calibri";
         style[DocumentApp.Attribute.FONT_SIZE] = 14;
-        style[DocumentApp.Attribute.BOLD] = true;
+        style[DocumentApp.Attribute.BOLD] = false;
         style[DocumentApp.Attribute.HORIZONTAL_ALIGNMENT] =
             DocumentApp.HorizontalAlignment.CENTER;
         header.setAttributes(style);
@@ -371,7 +356,7 @@ function generateIntentionsDoc(): void {
         let nextParagraph = doc.getBody().appendParagraph("");
         for (let value of mappedBody) {
             let style: DocumentStyle = {};
-            style[DocumentApp.Attribute.BOLD] = true;
+            style[DocumentApp.Attribute.BOLD] = false;
             let bullet = doc.getBody().appendListItem(`${value[0]}: `).setAttributes(
                 style,
             );

@@ -2,6 +2,7 @@ import Utils from "./modules/utils";
 import Variables from "./modules/variables";
 import UIOperations from "./modules/ui_operations";
 import EmailOperations from "./modules/email_operations";
+import FirebaseInit from "./modules/firebase_init";
 
 function showUsersSidebar(): void {
     try {
@@ -47,7 +48,9 @@ function addUserCallback(name : string, email : string, checked : boolean){
             let invitationText = Variables.getVariable("invitation_text");
             EmailOperations.sendEmail({to: email, subject: "Zaproszenie do modlitwy wstawienniczej MOST", text: invitationText, name: name});
         }
+        FirebaseInit.firestore.createDocument(`intentions/${email}`, {name: name, email: email});
         UIOperations.showDialog("Sukces", null, null, "Użytkownik został dodany");
+        
     } catch (e: any) {
         Utils.handleError(e);
     }
@@ -69,7 +72,8 @@ function removeUser() {
         let name = sheet.getRange(row, 1).getValue();
         let email = sheet.getRange(row, 2).getValue();
         sheet.deleteRow(row);
-        UIOperations.showDialog("Sukces", null, null, "Użytkownik " + name + " został usunięty");
+        FirebaseInit.firestore.deleteDocument(`intentions/${email}`);
+        UIOperations.showDialog("Sukces", null, null, "Użytkownik " + name + " został usunięty"); 
     } catch (e: any) {
         Utils.handleError(e);
     }
