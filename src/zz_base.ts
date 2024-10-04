@@ -24,6 +24,17 @@ function refreshVariables() {
     }
 }
 
+function showIntentionSidebar(): void {
+    try {
+        let widget = HtmlService.createTemplateFromFile(
+            "src/templates/AdminSidebar",
+        ).evaluate().setTitle("Modlitwa wstawiennicza MOST");
+        SpreadsheetApp.getUi().showSidebar(widget);
+    } catch (e: any) {
+        Utils.handleError(e);
+    }
+}
+
 function showDocumentation() {
     UIOperations.openUrl("https://docs.google.com/document/d/1EGnnS1uNXitrftmpcXH-I1Pm-K5oPIm9kV8aHn2SLwM/edit?usp=sharing")
 }
@@ -97,6 +108,7 @@ function onOpenInstallable() {
         .addItem("Dokumentacja", "showDocumentation")
         .addToUi();
     SheetOperations.refresh();
+    showIntentionSidebar();
 }
 
 // function onOpen() {

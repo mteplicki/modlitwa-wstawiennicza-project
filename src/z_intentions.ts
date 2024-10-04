@@ -56,17 +56,6 @@ function insertDialog(): void {
     }
 }
 
-function showIntentionSidebar(): void {
-    try {
-        let widget = HtmlService.createTemplateFromFile(
-            "src/templates/AdminSidebar",
-        ).evaluate().setTitle("Modlitwa wstawiennicza MOST");
-        SpreadsheetApp.getUi().showSidebar(widget);
-    } catch (e: any) {
-        Utils.handleError(e);
-    }
-}
-
 function deleteIntention(): void {
     UIOperations.showLoading();
     try {
