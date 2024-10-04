@@ -112,8 +112,18 @@ function sendMail() {
 function sendMailCallback(emails : string, subject : string, text : string){
     try {
         Logger.log("sendMailCallback");
+        let [, sheet] = Utils.getSheetByName("Uczestnicy");
+        let email_to_name : {[key:string]:string} = {}
+        for (let i = 3; i <= sheet.getLastRow(); i++) {
+            let name = sheet.getRange(i, 1).getValue() as string;
+            let email = sheet.getRange(i, 2).getValue() as string;
+            email_to_name[email] = name.split(" ")[0];
+        }
         for (let email of emails.split(",").map((email : string) => email.trim()).filter((email : string) => email !== "")) {
-            EmailOperations.sendEmail({to: email, subject: subject, text: text});
+            let name = email_to_name[email];
+            let subject_personalized = subject.replace("{{imie}}", name);
+            let text_personalized = text.replace("{{imie}}", name);
+            EmailOperations.sendEmail({to: email, subject: subject_personalized, text: text_personalized});
         }
         UIOperations.showDialog("Sukces", null, null, "Wiadomości zostały wysłane");
     } catch (e: any) {

@@ -16,6 +16,7 @@
             display: flex;
             flex-direction: row;
             justify-content: space-around;
+            gap: 10px;
             align-items: center;
             width: 100%;
             padding: 10px;
@@ -24,6 +25,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-around;
+            gap: 2px;
             align-items: center;
         }
     </style>
@@ -33,9 +35,19 @@
         <form action="" id="form1" style="width: 95%;">
             <input class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" id="name" title="Wybierz zakres" type="text" name="daterange" readonly value=<?=range ?> required>
         </form>
+        
         <div class="horizontal">
-            <button type="submit" form="form1" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" title="Akceptuj"> Akceptuj </button>
-            <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="google.script.host.close()" title="Anuluj"> Odrzuć </button>
+            <button onclick="predefinedDateRange('Mon')" class="bg-blue-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full" title="Zakres poniedziałkowy"> Zakres poniedziałkowy </button>
+        </div>
+        <div class="horizontal">
+            <button onclick="predefinedDateRange('Wed')" class="bg-blue-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full" title="Zakres środowy "> Zakres środowy </button>
+        </div>
+        <div class="horizontal">
+            <button onclick="predefinedDateRange('Sun')" class="bg-blue-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full" title="Zakres niedzielny"> Zakres niedzielny </button>
+        </div>
+        <div class="horizontal">
+            <button type="submit" form="form1" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full" title="Akceptuj"> Akceptuj </button>
+            <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded w-full" onclick="google.script.host.close()" title="Anuluj"> Odrzuć </button>
         </div>
     </div>
     <dialog id="dialog-1" style="background: rgba(255, 255, 255, 0);">
@@ -58,6 +70,62 @@
                 console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
             });
         });
+
+        /**
+         * @param {Date} date - the initial Date
+         * @param {('Mon'|'Tue'|'Wed'|'Thurs'|'Fri'|'Sat'|'Sun')} day - the day of week
+         * @returns {Date} - the Date of last occurrence or same Date if day param is invalid
+         */
+        function getLastDayOccurence (date, day) {
+            const d = new Date(date.getTime());
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thurs', 'Fri', 'Sat'];
+            if (days.includes(day)) {
+                const modifier = (d.getDay() + days.length - days.indexOf(day)) % 7 || 7;
+                d.setDate(d.getDate() - modifier);
+            }
+            return d;
+        }
+
+        function predefinedDateRange(defaultRange) {
+            // get the current date
+            const date = new Date();
+            let startDate = $('input[name="daterange"]').data('daterangepicker').startDate;
+            let endDate = $('input[name="daterange"]').data('daterangepicker').endDate;
+            switch (defaultRange) {
+                case "Mon":
+                    // get the last Sunday
+                    endDate = getLastDayOccurence(date, 'Sun');
+                    // get the last Monday
+                    startDate = getLastDayOccurence(endDate, 'Mon');
+                    
+                    break;
+
+                case "Wed":
+                    // get the last Tuesday
+                    endDate = getLastDayOccurence(date, 'Tue');
+
+                    //get the last Sunday
+                    startDate = getLastDayOccurence(endDate, 'Sun');
+
+                    break;
+
+                case "Sun":
+                    // get the last Saturday
+                    endDate = getLastDayOccurence(date, 'Sat');
+
+                    // get the last Wednesday
+                    startDate = getLastDayOccurence(endDate, 'Wed');
+
+                    break;
+            
+                default:
+                    break;
+            }
+            // set the date range
+            $('input[name="daterange"]').data('daterangepicker').setStartDate(startDate);
+            $('input[name="daterange"]').data('daterangepicker').setEndDate(endDate);
+        }
+
         function myFunction() {
             let x = document.getElementById("name").value;
             const dialog = document.getElementById('dialog-1');
