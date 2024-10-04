@@ -44,9 +44,10 @@ function addUserCallback(name : string, email : string, checked : boolean){
         sheet.insertRowBefore(3)
         let range = sheet.getRange("A3:B3");
         range.setValues([[name, email]]);
+        let imie = name.split(" ")[0];
         if (checked) {
             let invitationText = Variables.getVariable("invitation_text");
-            let invitation_text_personalized = invitationText.replace("{{imie}}", name);
+            let invitation_text_personalized = invitationText.replace("{{imie}}", imie);
             EmailOperations.sendEmail({to: email, subject: "Zaproszenie do modlitwy wstawienniczej MOST", text: invitation_text_personalized, name: name});
         }
         FirebaseInit.firestore.createDocument(`intentions/${email}`, {name: name, email: email});
