@@ -46,7 +46,8 @@ function addUserCallback(name : string, email : string, checked : boolean){
         range.setValues([[name, email]]);
         if (checked) {
             let invitationText = Variables.getVariable("invitation_text");
-            EmailOperations.sendEmail({to: email, subject: "Zaproszenie do modlitwy wstawienniczej MOST", text: invitationText, name: name});
+            let invitation_text_personalized = invitationText.replace("{{imie}}", name);
+            EmailOperations.sendEmail({to: email, subject: "Zaproszenie do modlitwy wstawienniczej MOST", text: invitation_text_personalized, name: name});
         }
         FirebaseInit.firestore.createDocument(`intentions/${email}`, {name: name, email: email});
         UIOperations.showDialog("Sukces", null, null, "Użytkownik został dodany");
