@@ -5,7 +5,7 @@ Do stworzenia wykorzystano arkusz kalkulacyjny Google Sheets wraz z pakietem Goo
 
 ### Idea
 
-Moim celem było stworzenie aplikacji do zarządzania przesyłanych intencji do omodlenia w szybki i bezkosztowy sposób. Wybrałem przez to pakiet Google Apps Script, który choć jest bardzo ograniczony, to funkcjonalność miał wystarczającą dla tego projektu. Panel administratora to jest arkusz Google Sheets, zautomatyzowany za pomocą skryptów, panelu bocznego oraz reguł ograniczających modyfikowanie arkusza. Logika panelu administratora jest napisana w języku TypeScript.
+Moim celem było stworzenie aplikacji do zarządzania przesyłanych intencji do omodlenia w szybki i bezkosztowy sposób. Wybrałem przez to pakiet Google Apps Script, który choć jest bardzo ograniczony, to funkcjonalność miał wystarczającą dla tego projektu. Co więcej, przy użyciu GAS integracja z innymi produktami Google, takimi jak GMail, jest bardzo prosta. Panel administratora to jest arkusz Google Sheets, zautomatyzowany za pomocą skryptów, panelu bocznego oraz reguł ograniczających modyfikowanie arkusza. Logika panelu administratora jest napisana w języku TypeScript.
 
 ### Funkcjonalności
 
