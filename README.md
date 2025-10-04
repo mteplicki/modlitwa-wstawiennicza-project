@@ -17,4 +17,4 @@ Panel administratora ma następujące funkcjonalności:
 
 Poza tym, projekt jest zintegrowany z aplikacją PWA modlitwy wstawienniczej (modlitwa-wstawiennicza-app):
 - synchronizowanie intencji z bazą Firestore
-- powiadamianie systemu Amazon Simple Notification Service w celu wysłania powiadomienia push przy przydzielaniu nowych intencji
+- powiadamianie systemu Firebase Cloud Messaging w celu wysłania powiadomienia push przy przydzielaniu nowych intencji
